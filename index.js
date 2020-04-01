@@ -4,7 +4,7 @@ const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 
 const dirpath = path.join(__dirname, 'files')
-const body = fs.readFileSync(__dirname + '/hi.html')
+const body = fs.readFileSync(path.join(__dirname, 'hi.html'))
 const $ = cheerio.load(body)
 
 if (!fs.existsSync(dirpath)) {
@@ -22,7 +22,8 @@ const download = url => {
           .on('error', error => {
             reject(error)
           })
-        stream.on('finish', () => {
+        stream
+          .on('finish', () => {
             resolve()
           })
       })
