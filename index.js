@@ -6,6 +6,7 @@ const cheerio = require('cheerio')
 const dirpath = path.join(__dirname, 'files')
 const body = fs.readFileSync(__dirname + '/hi.html')
 const $ = cheerio.load(body)
+const thread = 5
 
 if (!fs.existsSync(dirpath)) {
   fs.mkdirSync(dirpath)
@@ -41,21 +42,27 @@ $('a')
 
 const main = async () => {
   while (links.length) {
-    for (let i = 0, l = links.length; i < l; i++) {
-      console.log(`downloading ${i + 1}/${l} items: ${links[i]}`)
+    const downloadThreads = []
 
+    for (let i = 0, l = links.length; i < l; i++) {
       try {
         if (!filelist.includes(links[i].split('/').pop())) {
-          await download(links[i])
-        }
+          console.log(`downloading ${i + 1}/${l} items: ${links[i]}`)
 
-        links.splice(i, 1)
+          downloadThreads.push(download(links[i]))
+        }
       } catch (error) {
         console.error(error)
 
         links.push(links[i])
       }
+
+      if (!(i % thread)) {
+        await Promise.all(downloadThreads)
+      }
     }
+
+    links.splice(0, links.length)
   }
 }
 
