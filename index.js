@@ -4,7 +4,7 @@ const fetch = require('node-fetch')
 const cheerio = require('cheerio')
 
 const dirpath = path.join(__dirname, 'files')
-const body = fs.readFileSync(path.join(__dirname, 'hi.html'))
+const body = fs.readFileSync(__dirname + '/hi.html')
 const $ = cheerio.load(body)
 
 if (!fs.existsSync(dirpath)) {
@@ -22,14 +22,14 @@ const download = url => {
           .on('error', error => {
             reject(error)
           })
-        stream
-          .on('finish', () => {
+        stream.on('finish', () => {
             resolve()
           })
       })
   })
 }
 
+const filelist = fs.readdirSync(dirpath)
 const links = []
 
 $('a')
@@ -40,15 +40,21 @@ $('a')
   })
 
 const main = async () => {
-  for (let i = 0, l = links.length; i < l; i++) {
-    console.log(`downloading ${i + 1}/${l} items: ${links[i]}`)
+  while (links.length) {
+    for (let i = 0, l = links.length; i < l; i++) {
+      console.log(`downloading ${i + 1}/${l} items: ${links[i]}`)
 
-    try {
-      await download(links[i])
-    } catch (error) {
-      console.error(error)
+      try {
+        if (!filelist.includes(links[i].split('/').pop())) {
+          await download(links[i])
+        }
 
-      continue
+        links.splice(i, 1)
+      } catch (error) {
+        console.error(error)
+
+        links.push(links[i])
+      }
     }
   }
 }
